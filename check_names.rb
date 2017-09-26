@@ -1,32 +1,56 @@
-# let's pull some names from the orcid API
 require 'csv'
-require 'roo'
+require 'json'
+require 'cgi'
 require 'net/http'
 require 'namae'
 
 BASE_URL = 'https://pub.sandbox.orcid.org/v2.0/search/'
 TOKEN = '' # your token here
 
-  org_name = 'cincinnati'
-  input_name = 'Crowe, Sean'
+$org_name = 'cincinnati'
+$csv_file = 'names.csv'
 
-def name(input_name)
+$results = Array.new
+
+def parse_name(input_name)
   names = Namae.parse input_name
   names[0]
 end
 
-def search_url(name, org_name)
-  "https://pub.sandbox.orcid.org/v2.0/search/?q=given-names:#{CGI::escape(name.given)}~+AND+family-name:#{name.family}&fq=affiliation-org-name:#{org_name}"
+def search_url(name)
+  "#{BASE_URL}?q=given-names:#{CGI::escape(name.given)}"\
+  "~+AND+family-name:#{name.family}&fq=affiliation-org-name:#{$org_name}"
 end
 
-def query_api(name, org_name)
+def query_api(name)
   url = URI.parse(BASE_URL)
-  req = Net::HTTP::Get.new(search_url(name, org_name), initheader = {'Authorization type' => 'Bearer', 'Content-Type' =>'application/json', 'Access token' => TOKEN } )
-  res = Net::HTTP.start(url.host, url.port, use_ssl: true) {|http|
-      http.request(req)
-  }
+  req = Net::HTTP::Get.new(search_url(name),
+          initheader = {
+            'Authorization type' => 'Bearer',
+            'Content-Type' => 'application/json',
+            'Access token' => TOKEN
+          })
+  res = Net::HTTP.start(url.host, url.port, use_ssl: true) do |http|
+    http.request(req)
+  end
   res.body
 end
 
-a = query_api( name(input_name), org_name )
-puts a
+def parse_csv
+  CSV.foreach($csv_file, col_sep: ';').each do |row|
+    response = JSON.parse(query_api(parse_name(row[0])))
+
+    response['result'].each do |value|
+      $results << "#{row[0]}, #{value['orcid-identifier']['uri']}"
+    end
+  end
+end
+
+def write_results
+  File.open('results.csv', 'w') do |file|
+    file.syswrite $results.join "\n"
+  end
+end
+
+parse_csv
+write_results
