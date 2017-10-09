@@ -39,9 +39,12 @@ end
 def parse_csv
   CSV.foreach($csv_file, col_sep: ';').each do |row|
     response = JSON.parse(query_api(parse_name(row[0])))
-
-    response['result'].each do |value|
-      $results << "#{row[0]}, #{value['orcid-identifier']['uri']}"
+    if response['result'].empty?
+      $results << "#{row[0]}, --"
+    else
+      response['result'].each do |value|
+        $results << "#{row[0]}, #{value['orcid-identifier']['uri']}"
+      end
     end
   end
 end
