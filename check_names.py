@@ -15,6 +15,7 @@ def parse_csv():
   with open(csv_file, newline = '') as csvfile:
     name_reader = csv.reader(csvfile, delimiter = ';')
     for row in name_reader:
+      print("Checking name... " + row[0])
       query_results = query_api(parse_name(row[0]))['result']
       if query_results:
         for query_result in query_results:

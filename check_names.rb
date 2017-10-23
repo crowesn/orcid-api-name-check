@@ -38,6 +38,7 @@ end
 
 def parse_csv
   CSV.foreach($csv_file, col_sep: ';').each do |row|
+    puts "Checking name... #{row[0]}"
     response = JSON.parse(query_api(parse_name(row[0])))
     if response['result'].empty?
       $results << "#{row[0]}, --"
