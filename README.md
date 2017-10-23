@@ -2,6 +2,9 @@
 
 Script to query ORCID public api for names affiliated with UC
 
+A List of fields that you can search can be found here:
+[ORCID API Fields](http://members.orcid.org/api/tutorial/search-orcid-registry#field)
+
 ## Usage (Python)
 #### Requirements
 * Python version 3.6+
